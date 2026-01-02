@@ -17,8 +17,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Data Source=purchase.db";
-    options.UseSqlite(connectionString);
+        ?? "Host=buyer.cbses6ayg1ge.ap-south-1.rds.amazonaws.com;Database=TransportServiceDb;Username=postgres;Password=D6(Nwd_1V*-=;Trust Server Certificate=true;";
+    options.UseNpgsql(connectionString);
 });
 
 // Add FluentValidation
@@ -55,24 +55,6 @@ app.UseCors();
 app.UseAuthorization();
 app.MapControllers();
 
-// Ensure database is created
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    context.Database.EnsureCreated();
-    
-    // Seed initial StatusType data if needed
-    if (!context.StatusTypes.Any())
-    {
-        var now = DateTime.UtcNow;
-        context.StatusTypes.AddRange(
-            new purchase_service.Models.StatusType { Status = "Assigned", CreatedAt = now, LastModifiedAt = now },
-            new purchase_service.Models.StatusType { Status = "Canceled", CreatedAt = now, LastModifiedAt = now },
-            new purchase_service.Models.StatusType { Status = "Completed", CreatedAt = now, LastModifiedAt = now }
-        );
-        context.SaveChanges();
-    }
-}
+// No EnsureCreated or seeding logic here for DB-first approach
 
 app.Run();
-

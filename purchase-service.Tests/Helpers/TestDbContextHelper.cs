@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using purchase_service.Data;
 using purchase_service.Models;
+using purchase.Models;
 
 namespace purchase_service.Tests.Helpers;
 

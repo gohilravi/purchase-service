@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using purchase_service.Models;
+using purchase.Models;
 
 namespace purchase_service.Data;
 
@@ -23,40 +24,40 @@ public class ApplicationDbContext : DbContext
         // Configure Buyer
         modelBuilder.Entity<Buyer>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.HasKey(e => e.Id).HasName("Buyer_pkey");
+
+            entity.ToTable("Buyer");
+
+            entity.HasIndex(e => e.Email, "Buyer_Email_key").IsUnique();
+
+            entity.Property(e => e.Company).HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(now() AT TIME ZONE 'UTC'::text)");
+            entity.Property(e => e.Email).HasMaxLength(255);
+            entity.Property(e => e.LastModifiedAt).HasDefaultValueSql("(now() AT TIME ZONE 'UTC'::text)");
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Phone).HasMaxLength(20);
         });
 
         // Configure Purchase
         modelBuilder.Entity<Purchase>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.OfferId).IsRequired();
-            entity.Property(e => e.BuyerId).IsRequired();
-            entity.Property(e => e.StatusTypeId).IsRequired();
-            entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.LastModifiedAt).IsRequired();
+            entity.HasKey(e => e.Id).HasName("Purchase_pkey");
 
-            entity.HasOne(e => e.Buyer)
-                .WithMany()
-                .HasForeignKey(e => e.BuyerId)
-                .OnDelete(DeleteBehavior.Restrict);
+            entity.ToTable("Purchase");
 
-            entity.HasOne(e => e.StatusType)
-                .WithMany()
-                .HasForeignKey(e => e.StatusTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+            entity.HasIndex(e => e.BuyerId, "idx_Purchase_BuyerId");
 
-        // Configure StatusType
-        modelBuilder.Entity<StatusType>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.LastModifiedAt).IsRequired();
+            entity.HasIndex(e => e.OfferId, "idx_Purchase_OfferId");
+
+            entity.HasIndex(e => e.Status, "idx_Purchase_Status");
+
+            entity.Property(e => e.Amount).HasPrecision(12, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(now() AT TIME ZONE 'UTC'::text)");
+            entity.Property(e => e.LastModifiedAt).HasDefaultValueSql("(now() AT TIME ZONE 'UTC'::text)");
+            entity.Property(e => e.PurchaseDate).HasDefaultValueSql("(now() AT TIME ZONE 'UTC'::text)");
+            entity.Property(e => e.Status)
+                .HasMaxLength(30)
+                .HasDefaultValueSql("'Pending'::character varying");
         });
     }
 }

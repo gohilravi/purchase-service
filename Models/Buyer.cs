@@ -1,13 +1,21 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
 
-namespace purchase_service.Models;
+namespace purchase.Models;
 
-[ExcludeFromCodeCoverage]
-public class Buyer
+public partial class Buyer
 {
     public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-}
 
+    public string Name { get; set; } = null!;
+
+    public string Email { get; set; } = null!;
+
+    public string? Phone { get; set; }
+
+    public string? Company { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
+
+    public DateTime? LastModifiedAt { get; set; }
+}

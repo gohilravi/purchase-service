@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using purchase_service.Data;
 using purchase_service.Models;
 using purchase_service.Models.DTOs;
+using purchase.Models;
 
 namespace purchase_service.Services;
 
@@ -18,28 +19,22 @@ public class PurchaseService : IPurchaseService
 
     public async Task<PurchaseResponse> CreatePurchaseAsync(CreatePurchaseRequest request)
     {
-        // Validate buyer exists
-        var buyerExists = await _context.Buyers.AnyAsync(b => b.Id == request.BuyerId);
-        if (!buyerExists)
-        {
+        // Check if buyer exists
+        var buyer = await _context.Buyers.FindAsync(request.BuyerId);
+        if (buyer == null)
             throw new InvalidOperationException($"Buyer with ID {request.BuyerId} does not exist.");
-        }
 
         // Get the "Assigned" status type
-        var assignedStatus = await _context.StatusTypes
-            .FirstOrDefaultAsync(s => s.Status.Equals("Assigned", StringComparison.OrdinalIgnoreCase));
-
+        var assignedStatus = await _context.StatusTypes.FirstOrDefaultAsync(s => s.Status == "Assigned");
         if (assignedStatus == null)
-        {
-            throw new InvalidOperationException("StatusType 'Assigned' not found in database.");
-        }
+            throw new InvalidOperationException("Assigned status not found.");
 
         // Create new purchase
         var purchase = new Purchase
         {
             OfferId = request.OfferId,
             BuyerId = request.BuyerId,
-            StatusTypeId = assignedStatus.Id,
+            Status = assignedStatus.Status,
             CreatedAt = DateTime.UtcNow,
             LastModifiedAt = DateTime.UtcNow
         };
@@ -64,21 +59,17 @@ public class PurchaseService : IPurchaseService
             throw new InvalidOperationException($"Purchase with ID {purchaseId} does not exist.");
         }
 
-        // Get the status type by status name
-        var statusType = await _context.StatusTypes
-            .FirstOrDefaultAsync(s => s.Status.Equals(request.Status, StringComparison.OrdinalIgnoreCase));
-
+        // Find status type (case-insensitive)
+        var statusType = await _context.StatusTypes.FirstOrDefaultAsync(s => s.Status.ToLower() == request.Status.ToLower());
         if (statusType == null)
-        {
-            throw new InvalidOperationException($"StatusType '{request.Status}' not found in database.");
-        }
+            throw new InvalidOperationException($"Status '{request.Status}' not found.");
 
-        // Update only StatusTypeId and LastModifiedAt
-        purchase.StatusTypeId = statusType.Id;
+        // Update only Status and LastModifiedAt
+        purchase.Status = statusType.Status;
         purchase.LastModifiedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Purchase {PurchaseId} status updated to {Status}", purchaseId, request.Status);
+        _logger.LogInformation("Purchase {PurchaseId} status updated to {Status}", purchaseId, statusType.Status);
     }
 }
