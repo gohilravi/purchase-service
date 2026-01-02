@@ -48,7 +48,7 @@ public class PurchaseService : IPurchaseService
         // Publish command to sync record in ElasticSearch
         await _publishEndpoint.Publish(new Contracts.SyncRecordInElasticSearch
         {
-            ElasticSearchId = request.ElasticSearchId,
+            ElasticSearchId = request.OfferId.ToString(),
             ObjectType = "Purchase",
             Operation = "Create",
             Payload = JsonSerializer.Serialize(purchase)
@@ -87,7 +87,7 @@ public class PurchaseService : IPurchaseService
         // Publish command to sync record in ElasticSearch
         await _publishEndpoint.Publish(new Contracts.SyncRecordInElasticSearch
         {
-            ElasticSearchId = request.ElasticSearchId,
+            ElasticSearchId = purchase.OfferId.ToString(),
             ObjectType = "Purchase",
             Operation = "Update",
             Payload = JsonSerializer.Serialize(purchase)
