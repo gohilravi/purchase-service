@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using purchase_service.Data;
 using purchase_service.Models.DTOs;
@@ -26,6 +27,26 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddScoped<IValidator<CreatePurchaseRequest>, CreatePurchaseRequestValidator>();
 builder.Services.AddScoped<IValidator<UpdatePurchaseStatusRequest>, UpdatePurchaseStatusRequestValidator>();
+
+// Add MassTransit with RabbitMQ
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? "localhost";
+        var rabbitMqUsername = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+        var rabbitMqPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+        var rabbitMqPort = builder.Configuration.GetValue<ushort>("RabbitMQ:Port", 5672);
+
+        cfg.Host(rabbitMqHost, rabbitMqPort, "/", h =>
+        {
+            h.Username(rabbitMqUsername);
+            h.Password(rabbitMqPassword);
+        });
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 // Add services
 builder.Services.AddScoped<IPurchaseService, PurchaseService>();

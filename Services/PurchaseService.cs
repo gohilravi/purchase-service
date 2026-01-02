@@ -1,4 +1,7 @@
+using System.Text.Json;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using purchase_service.Contracts;
 using purchase_service.Data;
 using purchase_service.Models;
 using purchase_service.Models.DTOs;
@@ -10,31 +13,29 @@ public class PurchaseService : IPurchaseService
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<PurchaseService> _logger;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public PurchaseService(ApplicationDbContext context, ILogger<PurchaseService> logger)
+    public PurchaseService(
+        ApplicationDbContext context,
+        ILogger<PurchaseService> logger,
+        IPublishEndpoint publishEndpoint)
     {
         _context = context;
         _logger = logger;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<PurchaseResponse> CreatePurchaseAsync(CreatePurchaseRequest request)
     {
         // Check if buyer exists
-        var buyer = await _context.Buyers.FindAsync(request.BuyerId);
-        if (buyer == null)
-            throw new InvalidOperationException($"Buyer with ID {request.BuyerId} does not exist.");
-
-        // Get the "Assigned" status type
-        var assignedStatus = await _context.StatusTypes.FirstOrDefaultAsync(s => s.Status == "Assigned");
-        if (assignedStatus == null)
-            throw new InvalidOperationException("Assigned status not found.");
+       
 
         // Create new purchase
         var purchase = new Purchase
         {
             OfferId = request.OfferId,
             BuyerId = request.BuyerId,
-            Status = assignedStatus.Status,
+            Status = "Assigned",
             CreatedAt = DateTime.UtcNow,
             LastModifiedAt = DateTime.UtcNow
         };
@@ -43,6 +44,17 @@ public class PurchaseService : IPurchaseService
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Purchase created with ID {PurchaseId} for Buyer {BuyerId}", purchase.Id, request.BuyerId);
+
+        // Publish command to sync record in ElasticSearch
+        await _publishEndpoint.Publish(new Contracts.SyncRecordInElasticSearch
+        {
+            ElasticSearchId = request.ElasticSearchId,
+            ObjectType = "Purchase",
+            Operation = "Create",
+            Payload = JsonSerializer.Serialize(purchase)
+        });
+
+        _logger.LogInformation("Published SyncRecordInElasticSearch command for Purchase {PurchaseId}", purchase.Id);
 
         return new PurchaseResponse
         {
@@ -71,5 +83,16 @@ public class PurchaseService : IPurchaseService
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Purchase {PurchaseId} status updated to {Status}", purchaseId, statusType.Status);
+
+        // Publish command to sync record in ElasticSearch
+        await _publishEndpoint.Publish(new Contracts.SyncRecordInElasticSearch
+        {
+            ElasticSearchId = request.ElasticSearchId,
+            ObjectType = "Purchase",
+            Operation = "Update",
+            Payload = JsonSerializer.Serialize(purchase)
+        });
+
+        _logger.LogInformation("Published SyncRecordInElasticSearch command for Purchase {PurchaseId}", purchase.Id);
     }
 }

@@ -1,7 +1,9 @@
 using FluentAssertions;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using purchase_service.Contracts;
 using purchase_service.Data;
 using purchase_service.Models;
 using purchase_service.Models.DTOs;
@@ -16,13 +18,15 @@ public class PurchaseServiceTests : IDisposable
 {
     private readonly ApplicationDbContext _context;
     private readonly Mock<ILogger<PurchaseService>> _loggerMock;
+    private readonly Mock<IPublishEndpoint> _publishEndpointMock;
     private readonly PurchaseService _service;
 
     public PurchaseServiceTests()
     {
         _context = TestDbContextHelper.CreateInMemoryDbContext();
         _loggerMock = new Mock<ILogger<PurchaseService>>();
-        _service = new PurchaseService(_context, _loggerMock.Object);
+        _publishEndpointMock = new Mock<IPublishEndpoint>();
+        _service = new PurchaseService(_context, _loggerMock.Object, _publishEndpointMock.Object);
     }
 
     [Fact]
@@ -58,6 +62,13 @@ public class PurchaseServiceTests : IDisposable
                 It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Purchase created with ID") && v.ToString()!.Contains(request.BuyerId.ToString())),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify SyncRecordInElasticSearch command was published
+        _publishEndpointMock.Verify(
+            x => x.Publish(
+                It.IsAny<Contracts.SyncRecordInElasticSearch>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -137,6 +148,13 @@ public class PurchaseServiceTests : IDisposable
                 It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Purchase") && v.ToString()!.Contains(purchase.Id.ToString()) && v.ToString()!.Contains("status updated to") && v.ToString()!.Contains(request.Status)),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify SyncRecordInElasticSearch command was published
+        _publishEndpointMock.Verify(
+            x => x.Publish(
+                It.IsAny<Contracts.SyncRecordInElasticSearch>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

@@ -56,8 +56,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.LastModifiedAt).HasDefaultValueSql("(now() AT TIME ZONE 'UTC'::text)");
             entity.Property(e => e.PurchaseDate).HasDefaultValueSql("(now() AT TIME ZONE 'UTC'::text)");
             entity.Property(e => e.Status)
-                .HasMaxLength(30)
-                .HasDefaultValueSql("'Pending'::character varying");
+                .HasMaxLength(30);
         });
     }
 }

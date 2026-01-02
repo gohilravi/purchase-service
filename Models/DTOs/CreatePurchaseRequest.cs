@@ -11,5 +11,9 @@ public class CreatePurchaseRequest
     
     [JsonPropertyName("buyer_id")]
     public int BuyerId { get; set; }
+    
+    [JsonPropertyName("elastic_search_id")]
+    public string ElasticSearchId { get; set; }
+    
 }
 
