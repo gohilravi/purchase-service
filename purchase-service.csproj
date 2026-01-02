@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="purchase-service.Tests/**" />
+    <Content Remove="purchase-service.Tests/**" />
+    <EmbeddedResource Remove="purchase-service.Tests/**" />
+    <None Remove="purchase-service.Tests/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />

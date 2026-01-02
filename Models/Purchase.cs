@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace purchase_service.Models;
 
+[ExcludeFromCodeCoverage]
 public class Purchase
 {
     public int Id { get; set; }

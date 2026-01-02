@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace purchase_service.Models.DTOs;
 
+[ExcludeFromCodeCoverage]
 public class ApiResponse<T>
 {
     public bool Success { get; set; }

@@ -66,9 +66,9 @@ using (var scope = app.Services.CreateScope())
     {
         var now = DateTime.UtcNow;
         context.StatusTypes.AddRange(
-            new Models.StatusType { Status = "Assigned", CreatedAt = now, LastModifiedAt = now },
-            new Models.StatusType { Status = "Canceled", CreatedAt = now, LastModifiedAt = now },
-            new Models.StatusType { Status = "Completed", CreatedAt = now, LastModifiedAt = now }
+            new purchase_service.Models.StatusType { Status = "Assigned", CreatedAt = now, LastModifiedAt = now },
+            new purchase_service.Models.StatusType { Status = "Canceled", CreatedAt = now, LastModifiedAt = now },
+            new purchase_service.Models.StatusType { Status = "Completed", CreatedAt = now, LastModifiedAt = now }
         );
         context.SaveChanges();
     }
