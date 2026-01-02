@@ -1,5 +1,8 @@
-﻿namespace purchase_service.Contracts;
+﻿using MassTransit;
 
+namespace purchase_service.Contracts;
+
+[EntityName("SyncRecordInElasticSearch")]
 public class SyncRecordInElasticSearch
 {
     public string ElasticSearchId { get; set; } = string.Empty;
